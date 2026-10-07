@@ -70,6 +70,12 @@ tests/
 | Jornada do QA | Caso → ciclo → execução com falha → bug já preenchido e ligado à execução → painel com 1 bug e 1 execução |
 | Execução com sucesso | Caso aprovado: ciclo com 1 aprovado e 0 falhas; painel com 1 execução e 0 bugs |
 | Usuários e convites | Proprietário vê os 6 papéis, convida um e-mail (pendente com o papel) e revoga o convite. Aceitar o convite fica para quando houver como ler o e-mail |
+| Ciclo concluído | Concluir trava os resultados (ciclo e execução); reabrir libera |
+| Bloqueado e ignorado | Contadores do ciclo, relatórios CSV e PDF baixados e ciclo de reteste com os casos que não passaram |
+| Edição concorrente | Salvar uma execução alterada em outra aba mostra o aviso de conflito e recarregar traz a versão nova |
+| Planos | Plano com ciclo reflete o progresso; editar, excluir e arquivar; nome vazio recusado |
+| Membros do projeto | Criador entra como Lead e não pode ser rebaixado; adicionar exige escolher uma pessoa |
+| Validações | Projeto com chave duplicada ou inválida, caso sem título, convite com e-mail inválido, cadastro com e-mail repetido |
 
 ## Limpeza das contas de teste
 

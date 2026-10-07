@@ -31,7 +31,7 @@ env:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +46,14 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
-      - run: npx playwright install --with-deps ${{ matrix.project }}
+      # O download de pacotes do apt já travou por 20 min (job cancelado por timeout): limita cada tentativa e repete.
+      - name: Instala o navegador
+        run: |
+          for attempt in 1 2 3; do
+            timeout 8m npx playwright install --with-deps ${{ matrix.project }} && exit 0
+            echo "Instalação falhou ou travou (tentativa $attempt de 3)"
+          done
+          exit 1
 
       # push e pull request rodam só os testes que não criam dados no ambiente.
       # O agendamento diário e a execução manual com "all" rodam tudo (inclui @writes).
@@ -57,7 +64,8 @@ jobs:
         run: |
           echo "Escopo: $SCOPE"
           if [ "$SCOPE" = "all" ]; then
-            npx playwright test --project=${{ matrix.project }}
+            # 1 worker: o cadastro da API aceita 5 por minuto por IP e cada teste @writes cria uma conta.
+            npx playwright test --project=${{ matrix.project }} --workers=1
           else
             npx playwright test --project=${{ matrix.project }} --grep-invert @writes
           fi
