@@ -55,7 +55,8 @@ function parseArgs(argv: string[]) {
 
 async function findOrganizations(db: Client, olderThanHours: number): Promise<OrgRow[]> {
   const { rows } = await db.query<OrgRow>(
-    `SELECT o.id, o.name, o."createdAt",
+    // "createdAt" é `timestamp` sem fuso, gravado em UTC; AT TIME ZONE 'UTC' evita que o driver o leia como horário local.
+    `SELECT o.id, o.name, o."createdAt" AT TIME ZONE 'UTC' AS "createdAt",
             (SELECT count(*)::int FROM "Project" p WHERE p."organizationId" = o.id) AS projects,
             (SELECT count(*)::int FROM "TestCase" t WHERE t."organizationId" = o.id) AS "testCases",
             (SELECT count(*)::int FROM "Issue" i WHERE i."organizationId" = o.id) AS issues
