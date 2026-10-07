@@ -41,9 +41,16 @@ jobs:
       # push e pull request rodam só os testes que não criam dados no ambiente.
       # O agendamento diário e a execução manual com "all" rodam tudo (inclui @writes).
       - name: Testes
-        run: >
-          npx playwright test --project=${{ matrix.project }}
-          ${{ (github.event_name == 'schedule' || inputs.scope == 'all') && '' || '--grep-invert @writes' }}
+        env:
+          # Não usar string vazia no ternário (`cond && '' || x` sempre cai no x): valores não vazios.
+          SCOPE: ${{ (github.event_name == 'schedule' || inputs.scope == 'all') && 'all' || 'readonly' }}
+        run: |
+          echo "Escopo: $SCOPE"
+          if [ "$SCOPE" = "all" ]; then
+            npx playwright test --project=${{ matrix.project }}
+          else
+            npx playwright test --project=${{ matrix.project }} --grep-invert @writes
+          fi
 
       - uses: actions/upload-artifact@v6
         if: ${{ !cancelled() }}
