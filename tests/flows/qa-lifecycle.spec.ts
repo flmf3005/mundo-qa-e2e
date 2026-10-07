@@ -8,6 +8,8 @@ import { TestCasePage } from '../../src/pages/test-case.page';
 // Cada execução usa uma organização nova, então roda em paralelo e repete sem depender de estado anterior.
 test.describe('Jornada do QA', { tag: '@writes' }, () => {
   test('do caso de teste ao bug ligado à execução que falhou', async ({ workspace }) => {
+    // Jornada longa (cadastro + 5 etapas): no WebKit passa de 60s, o limite padrão do projeto.
+    test.setTimeout(120_000);
     const { page, project, firstCaseKey } = workspace;
     const caseKey = firstCaseKey;
 
