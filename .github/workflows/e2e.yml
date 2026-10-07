@@ -1,0 +1,55 @@
+name: E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 9 * * *' # todo dia, 06:00 em Brasília
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'O que rodar'
+        type: choice
+        default: readonly
+        options: [readonly, all]
+
+env:
+  # Defina a variável de repositório BASE_URL para apontar para outro ambiente.
+  BASE_URL: ${{ vars.BASE_URL || 'https://mundoqa-staging.onrender.com' }}
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npx playwright install --with-deps ${{ matrix.project }}
+
+      # push e pull request rodam só os testes que não criam dados no ambiente.
+      # O agendamento diário e a execução manual com "all" rodam tudo (inclui @writes).
+      - name: Testes
+        run: >
+          npx playwright test --project=${{ matrix.project }}
+          ${{ (github.event_name == 'schedule' || inputs.scope == 'all') && '' || '--grep-invert @writes' }}
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

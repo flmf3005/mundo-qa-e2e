@@ -1,0 +1,24 @@
+{
+  "name": "mundo-qa-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Testes E2E (Playwright + TypeScript) do Mundo QA, rodando contra o ambiente de staging.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:readonly": "playwright test --grep-invert @writes",
+    "test:writes": "playwright test --grep @writes",
+    "test:chromium": "playwright test --project=chromium",
+    "test:ui": "playwright test --ui",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.6.0"
+  }
+}
