@@ -87,6 +87,19 @@ Salvaguardas:
 
 A `DATABASE_URL` vem do seu ambiente e nunca é guardada no repositório. Os arquivos de anexo no armazenamento S3 não são apagados (os testes atuais não enviam anexos).
 
+### Usuário do banco só para a limpeza (recomendado)
+
+Em vez da URL principal da API, use um usuário com o mínimo necessário. Crie-o por SQL (no Neon, papéis criados pelo console ou pela API recebem `neon_superuser`, com privilégios bem maiores; por SQL não recebem nada além do que você concede):
+
+```sql
+CREATE ROLE e2e_cleanup LOGIN PASSWORD '<senha forte>';
+GRANT USAGE ON SCHEMA public TO e2e_cleanup;
+GRANT SELECT ON "Organization", "Membership", "User", "Project", "TestCase", "Issue" TO e2e_cleanup;
+GRANT DELETE ON "Organization", "User" TO e2e_cleanup;
+```
+
+Com isso o script roda inteiro, e as exclusões em cascata das demais tabelas não precisam de permissão extra (o PostgreSQL as executa com os privilégios do dono). O usuário não consegue alterar projetos, casos ou bugs diretamente, ler a auditoria, apagar tabelas nem criar objetos. Se o resumo do script passar a contar outras tabelas, será preciso dar `SELECT` nelas.
+
 ### Limpeza automática (noturna)
 
 O workflow `E2E` tem um job `cleanup` que roda **só no agendamento noturno**, depois dos testes, e apaga as contas E2E. Ele apaga tudo que casa com o padrão E2E, inclusive o que foi criado durante o dia por execuções manuais ou locais. Para ligá-lo, configure em *Settings → Secrets and variables → Actions*:

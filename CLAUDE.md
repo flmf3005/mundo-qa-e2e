@@ -37,3 +37,26 @@ npm test                  # tudo
 
 - O staging é compartilhado e tem dados reais de uso: não rodar testes destrutivos nem em massa sem avisar o dono.
 - Respeitar o rate limit da API: poucos workers (2 no CI).
+
+## Estado atual (atualizado em 07/10/2026)
+
+**Pronto e publicado em `main`** (repositório flmf3005/mundo-qa-e2e, CI verde nos 3 navegadores):
+
+- Playwright 1.63 + TypeScript, Node 24, licença MIT.
+- 11 testes: API de saúde, telas públicas, login inválido, cadastro/login, projetos, casos de teste e a jornada completa do QA (caso → ciclo → execução com falha → bug ligado → painel).
+- Page Objects em `src/pages`, fixtures `user`, `loggedInPage` e `workspace` (conta nova + projeto).
+- CI com matriz chromium/firefox/webkit; push e PR rodam só o que não é `@writes`; o agendamento noturno e o manual com `scope = all` rodam tudo.
+- Script `npm run cleanup` e job `cleanup` noturno (ver "Limpeza"), já com o secret `DATABASE_URL` e a variável `CLEANUP_DB_HOST` configurados pelo dono. O staging foi limpo uma vez à mão (26 organizações E2E).
+
+**Pendente:**
+
+1. Conferir o log da **primeira execução agendada** (08/10/2026, ~06:00 de Brasília, evento `schedule`, aba Actions). Esperado: jobs de teste com `Escopo: all` (11 testes cada) e `cleanup` apagando ~15 organizações. Falhas prováveis: variável/secret com nome ou valor errado, `--confirm-host` diferente do host da URL, falta de `GRANT` no usuário do banco. Em qualquer uma nada é apagado.
+2. Ampliar a cobertura: execução com sucesso, papéis e permissões, anexos e importação de casos.
+
+**Limitações conhecidas:**
+
+- O Firefox do Playwright não abre na máquina do dono (Windows build Insider 26300, erro de `mozglue`). O Firefox é validado só no CI.
+- Não existe API para apagar contas; o staging acumula organizações `E2E` entre limpezas.
+- O workflow `cleanup` só roda em `schedule`; não há botão manual para ele de propósito.
+
+**Convenções de trabalho com o dono:** comandos para ele rodar em sintaxe Cmder (cmd.exe); nunca ler a `DATABASE_URL`; commit e push só quando ele pedir.
