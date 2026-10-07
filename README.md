@@ -69,10 +69,28 @@ tests/
 | Casos de teste | Caso ativo com passo é criado e listado |
 | Jornada do QA | Caso → ciclo → execução com falha → bug já preenchido e ligado à execução → painel com 1 bug e 1 execução |
 
+## Limpeza das contas de teste
+
+Os testes `@writes` deixam organizações e usuários no ambiente. O script `scripts/cleanup-e2e.ts` remove só o que os testes criaram:
+
+```bash
+DATABASE_URL=postgresql://... npm run cleanup                     # dry-run: lista, não apaga
+DATABASE_URL=postgresql://... npm run cleanup -- --apply --confirm-host=<host do banco>
+```
+
+Salvaguardas:
+
+- **Dry-run por padrão.** Para apagar, é preciso `--apply` **e** repetir o host do banco em `--confirm-host`, o que evita rodar no banco errado por engano.
+- **Padrões rígidos.** Só entram organizações `E2E Org <8 hex>` cujos membros sejam todos `e2e-<8 hex>@mundoqa-e2e.test`. Uma organização com qualquer membro fora do padrão é ignorada.
+- **Só o que já é antigo.** Por padrão ignora o que tem menos de 6 horas (`--older-than=<horas>`; `0` inclui tudo), para não apagar uma execução em andamento.
+- **Transação por organização:** um `DELETE` em cascata; se falhar, nada daquela organização é apagado.
+
+A `DATABASE_URL` vem do seu ambiente e nunca é guardada no repositório. Os arquivos de anexo no armazenamento S3 não são apagados (os testes atuais não enviam anexos).
+
 ## Decisões
 
 - **Sem reset de dados no staging.** O Mundo QA tem uma API de testes, mas ela existe só no ambiente descartável (`ENABLE_TEST_API`). No staging, cada teste cria o que precisa com identificadores únicos, e isso permite rodar em paralelo.
-- **Contas de teste ficam no ambiente.** Não há API para apagá-las, então todas levam o prefixo `E2E`, que permite limpeza periódica.
+- **Contas de teste ficam no ambiente.** Não há API para apagá-las, então todas levam o prefixo `E2E` e a limpeza é feita direto no banco (veja abaixo).
 - **`data-id` em vez de texto ou CSS.** Os testes não quebram quando o texto, a tradução ou o estilo mudam.
 
 ## Licença

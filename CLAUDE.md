@@ -18,6 +18,12 @@ Testes E2E (Playwright + TypeScript) do Mundo QA. Repositório **público**, usa
 - Testes que criam dados no ambiente levam a tag `@writes`; verificações rápidas levam `@smoke`.
 - Não há API de reset no staging (`ENABLE_TEST_API` só existe no ambiente descartável do mundo-qa). Para um banco limpo, usar o `docker-compose.test.yml` do mundo-qa e `BASE_URL=http://localhost:8081`.
 
+## Limpeza
+
+- `npm run cleanup` (`scripts/cleanup-e2e.ts`) remove contas e organizações E2E direto no banco; não existe API para isso.
+- Dry-run por padrão; apagar exige `--apply --confirm-host=<host>`. Só casa `E2E Org <8 hex>` e `e2e-<8 hex>@mundoqa-e2e.test`.
+- A `DATABASE_URL` é do usuário e nunca deve ser lida, impressa nem guardada por quem automatiza. Rodar em banco real só com o usuário.
+
 ## Comandos
 
 ```bash
