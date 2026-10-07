@@ -50,4 +50,12 @@ export class RunPage {
     await this.saveButton.click();
     await expect(this.currentStatus).toContainText('Falhou');
   }
+
+  /** Marca todos os passos como aprovados, define o resultado do caso como aprovado e salva. */
+  async passAll() {
+    await this.page.getByTestId('run-all-passed').click();
+    await this.page.getByTestId('run-status-passed').click();
+    await this.saveButton.click();
+    await expect(this.currentStatus).toContainText('Passou');
+  }
 }

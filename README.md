@@ -68,6 +68,7 @@ tests/
 | Projetos | Projeto criado fica selecionado e aparece na lista |
 | Casos de teste | Caso ativo com passo é criado e listado |
 | Jornada do QA | Caso → ciclo → execução com falha → bug já preenchido e ligado à execução → painel com 1 bug e 1 execução |
+| Execução com sucesso | Caso aprovado: ciclo com 1 aprovado e 0 falhas; painel com 1 execução e 0 bugs |
 
 ## Limpeza das contas de teste
 
