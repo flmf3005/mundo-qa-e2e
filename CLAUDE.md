@@ -62,4 +62,15 @@ npm test                  # tudo
 - Plano arquivado esconde os botões de ação (não há "reativar" na tela), então o teste cobre só arquivar.
 - Não confirmado: se um job de teste que estoura `timeout-minutes` impede o `cleanup` (`!cancelled()`). Se acontecer, os dados ficam para a noite seguinte.
 
+**Aprendizados do app (para escrever testes novos sem reabrir o código do mundo-qa):**
+
+- `data-id` com e-mail ou nome no sufixo usa a regra `kebab` do front (minúsculas; o que não é letra ou número vira `-`): `emailId()` em `src/utils/data.ts`. Erros de campo seguem `<data-id do campo>-error` (ex.: `projects-create-key-error`, `users-invite-email-error`, `register-email-error`); erros gerais de formulário são `<tela>-form-error`.
+- O seletor de papel do convite lista do maior para o menor (Proprietário … Visualizador). Papéis no projeto: Responsável (Lead), Tester, Desenvolvedor, Visualizador. O último Lead do projeto não pode ser rebaixado (a tela recarrega o valor antigo).
+- Criar um plano pelo modal já abre a página dele. Concluir um ciclo trava ciclo e execuções (`cycle-locked-alert`, `run-locked-alert`); reabrir libera.
+- Conflito de edição: a API devolve 409 "alterada por outra pessoa" quando `expectedUpdatedAt` está velho; o teste usa uma segunda aba da mesma sessão. O reteste vem com Falharam e Bloqueados marcados e Ignorados desmarcado.
+- A fixture `workspace` cria o projeto `QAE`; o primeiro caso é `QAE-TC-1` e o segundo `QAE-TC-2`. Ao esperar navegação para uma URL parecida com a atual, usar `not.toHaveURL(atual)` antes do regex, senão a asserção passa na página antiga.
+- O convite só vai por e-mail (`MailService`); sem SMTP o link só aparece no log do servidor. Não há como um teste obtê-lo no staging hoje.
+
+**Ambiente da máquina do dono:** só o Chromium do Playwright está instalado (`npx playwright install chromium`). Não há Python; scripts auxiliares em Node. Windows com Cmder (cmd.exe) para comandos dele.
+
 **Convenções de trabalho com o dono:** comandos para ele rodar em sintaxe Cmder (cmd.exe); nunca ler a `DATABASE_URL`; commit e push só quando ele pedir.
