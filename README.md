@@ -16,7 +16,7 @@ Este repositório é independente do código da aplicação: testa o sistema de 
 
 ## Como rodar
 
-Requisitos: Node 20+.
+Requisitos: Node 24+ (há um `.nvmrc`).
 
 ```bash
 npm install

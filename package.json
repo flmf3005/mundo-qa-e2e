@@ -5,7 +5,7 @@
   "description": "Testes E2E (Playwright + TypeScript) do Mundo QA, rodando contra o ambiente de staging.",
   "license": "MIT",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "test": "playwright test",
