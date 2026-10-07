@@ -23,6 +23,7 @@ Testes E2E (Playwright + TypeScript) do Mundo QA. Repositório **público**, usa
 - `npm run cleanup` (`scripts/cleanup-e2e.ts`) remove contas e organizações E2E direto no banco; não existe API para isso.
 - Dry-run por padrão; apagar exige `--apply --confirm-host=<host>`. Só casa `E2E Org <8 hex>` e `e2e-<8 hex>@mundoqa-e2e.test`.
 - A `DATABASE_URL` é do usuário e nunca deve ser lida, impressa nem guardada por quem automatiza. Rodar em banco real só com o usuário.
+- Automático: o job `cleanup` de `.github/workflows/e2e.yml` roda só no agendamento noturno, após os testes. Usa o secret `DATABASE_URL` e a variável `CLEANUP_DB_HOST` (opcional: `CLEANUP_OLDER_THAN_HOURS`, padrão 0). Apaga tudo que casa com o padrão E2E, inclusive dados de execuções manuais do dia.
 
 ## Comandos
 

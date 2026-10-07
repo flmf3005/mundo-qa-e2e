@@ -87,6 +87,18 @@ Salvaguardas:
 
 A `DATABASE_URL` vem do seu ambiente e nunca é guardada no repositório. Os arquivos de anexo no armazenamento S3 não são apagados (os testes atuais não enviam anexos).
 
+### Limpeza automática (noturna)
+
+O workflow `E2E` tem um job `cleanup` que roda **só no agendamento noturno**, depois dos testes, e apaga as contas E2E. Ele apaga tudo que casa com o padrão E2E, inclusive o que foi criado durante o dia por execuções manuais ou locais. Para ligá-lo, configure em *Settings → Secrets and variables → Actions*:
+
+| Tipo | Nome | Valor |
+| --- | --- | --- |
+| Secret | `DATABASE_URL` | Conexão do banco do ambiente testado (de preferência um usuário do banco só para a limpeza) |
+| Variable | `CLEANUP_DB_HOST` | Host do banco, o mesmo que `npm run cleanup` imprime em `Banco:` |
+| Variable (opcional) | `CLEANUP_OLDER_THAN_HOURS` | Idade mínima, em horas, do que será apagado. Padrão `0` (tudo) |
+
+Sem o secret e a variável, o job falha avisando o que falta e **não apaga nada**. Execuções que criam dados (agendada e manual com `scope = all`) entram numa fila, uma por vez, então a limpeza não atinge dados de outra execução em andamento. Em repositório público, o GitHub desliga agendamentos após 60 dias sem atividade.
+
 ## Decisões
 
 - **Sem reset de dados no staging.** O Mundo QA tem uma API de testes, mas ela existe só no ambiente descartável (`ENABLE_TEST_API`). No staging, cada teste cria o que precisa com identificadores únicos, e isso permite rodar em paralelo.

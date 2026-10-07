@@ -14,6 +14,16 @@ on:
         default: readonly
         options: [readonly, all]
 
+permissions:
+  contents: read
+
+# Execuções que criam dados (agendada e manual com "all") entram numa fila, uma por vez, para que a limpeza
+# da noite nunca apague dados de outra execução em andamento. As somente-leitura não escrevem nada,
+# então cada uma tem o próprio grupo e não espera ninguém.
+concurrency:
+  group: ${{ (github.event_name == 'schedule' || inputs.scope == 'all') && 'e2e-writes' || format('e2e-readonly-{0}', github.run_id) }}
+  cancel-in-progress: false
+
 env:
   # Defina a variável de repositório BASE_URL para apontar para outro ambiente.
   BASE_URL: ${{ vars.BASE_URL || 'https://mundoqa-staging.onrender.com' }}
@@ -60,3 +70,36 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 14
+
+  # Só no agendamento noturno, depois dos testes: apaga as contas E2E que eles criaram (e as que sobraram
+  # de execuções manuais). Precisa do secret DATABASE_URL e da variável CLEANUP_DB_HOST (veja o README).
+  # `!cancelled()` limpa mesmo quando algum teste falhou, que é quando mais sobra dado.
+  cleanup:
+    needs: e2e
+    if: ${{ !cancelled() && github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CLEANUP_DB_HOST: ${{ vars.CLEANUP_DB_HOST }}
+      # Idade mínima (em horas) do que será apagado. 0 apaga tudo que casa com o padrão E2E.
+      CLEANUP_OLDER_THAN_HOURS: ${{ vars.CLEANUP_OLDER_THAN_HOURS || '0' }}
+    steps:
+      - name: Confere a configuração
+        run: |
+          missing=0
+          if [ -z "$DATABASE_URL" ]; then echo "::error::Secret DATABASE_URL não definido (Settings > Secrets and variables > Actions)"; missing=1; fi
+          if [ -z "$CLEANUP_DB_HOST" ]; then echo "::error::Variável CLEANUP_DB_HOST não definida (host do banco, ex.: ep-xxxx.neon.tech)"; missing=1; fi
+          exit $missing
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Apaga as contas E2E
+        run: npm run cleanup -- --apply --confirm-host="$CLEANUP_DB_HOST" --older-than="$CLEANUP_OLDER_THAN_HOURS"
