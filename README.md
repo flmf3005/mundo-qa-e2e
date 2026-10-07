@@ -69,6 +69,7 @@ tests/
 | Casos de teste | Caso ativo com passo é criado e listado |
 | Jornada do QA | Caso → ciclo → execução com falha → bug já preenchido e ligado à execução → painel com 1 bug e 1 execução |
 | Execução com sucesso | Caso aprovado: ciclo com 1 aprovado e 0 falhas; painel com 1 execução e 0 bugs |
+| Usuários e convites | Proprietário vê os 6 papéis, convida um e-mail (pendente com o papel) e revoga o convite. Aceitar o convite fica para quando houver como ler o e-mail |
 
 ## Limpeza das contas de teste
 
