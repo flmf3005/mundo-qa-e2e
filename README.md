@@ -47,15 +47,27 @@ BASE_URL=http://localhost:8081 npm test
 
 ```text
 src/
-  fixtures/      test.extend com user e loggedInPage
-  pages/         Page Objects (login, cadastro, painel)
+  fixtures/      test.extend com user, loggedInPage e workspace (conta + projeto)
+  pages/         Page Objects (login, cadastro, painel, projetos, casos, ciclo/execução, bugs)
   utils/         geração de dados de teste
   global-setup.ts
 tests/
   public/        telas e endpoints sem login
   auth/          cadastro e login
+  flows/         projetos, casos de teste e a jornada completa do QA
 .github/workflows/e2e.yml
 ```
+
+## Cenários
+
+| Área | O que é verificado |
+| --- | --- |
+| API | `/api/health` e `/api/ready` respondem |
+| Telas públicas | Login, cadastro, redirecionamento de rota protegida |
+| Autenticação | Credenciais inválidas; cadastro, logout e novo login |
+| Projetos | Projeto criado fica selecionado e aparece na lista |
+| Casos de teste | Caso ativo com passo é criado e listado |
+| Jornada do QA | Caso → ciclo → execução com falha → bug já preenchido e ligado à execução → painel com 1 bug e 1 execução |
 
 ## Decisões
 

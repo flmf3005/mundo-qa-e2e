@@ -15,6 +15,16 @@ export class DashboardPage {
     this.envBadge = page.getByTestId('env-badge');
   }
 
+  /** Valor de um indicador do painel (`open-bugs`, `executions`, `pass-rate`, `fix-time`, `cases`). */
+  stat(name: string): Locator {
+    return this.page.getByTestId(`dashboard-stat-${name}-value`);
+  }
+
+  async goto() {
+    await this.page.goto('/');
+    await this.expectLoaded();
+  }
+
   async expectLoaded() {
     await expect(this.root).toBeVisible();
     await expect(this.title).toHaveText('Painel');
