@@ -120,6 +120,15 @@ O workflow `E2E` tem um job `cleanup` que roda **só no agendamento noturno**, d
 
 Sem o secret e a variável, o job falha avisando o que falta e **não apaga nada**. Execuções que criam dados (agendada e manual com `scope = all`) entram numa fila, uma por vez, então a limpeza não atinge dados de outra execução em andamento. Em repositório público, o GitHub desliga agendamentos após 60 dias sem atividade.
 
+## Limite de cadastro da API
+
+A API aceita poucos cadastros por minuto e cada teste `@writes` cria uma conta. Dois mecanismos mantêm a suíte estável:
+
+- `RegisterPage.registerAs` reconhece o bloqueio `Too Many Requests`, espera (20 s, 30 s, 40 s, 60 s) e reenvia o mesmo formulário. Quando isso acontece, o relatório HTML traz a anotação `cadastro-limitado`. O comportamento é coberto por `tests/auth/register-throttle.spec.ts`.
+- No escopo `all` do CI (agendado e manual), os navegadores rodam **um de cada vez** (`max-parallel: 1`) e com 1 worker, para não dividirem o limite.
+
+`npm run probe:throttle` envia requisições de corpo vazio (nada é criado) e mostra se a chave do limite é estável por cliente. No staging ela **não** é: o app não vê o IP real por trás do Cloudflare e do Render, o que é um achado sobre o produto (ver `CLAUDE.md`, "Pendente").
+
 ## Decisões
 
 - **Sem reset de dados no staging.** O Mundo QA tem uma API de testes, mas ela existe só no ambiente descartável (`ENABLE_TEST_API`). No staging, cada teste cria o que precisa com identificadores únicos, e isso permite rodar em paralelo.

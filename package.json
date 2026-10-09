@@ -15,6 +15,7 @@
     "test:ui": "playwright test --ui",
     "report": "playwright show-report",
     "cleanup": "tsx scripts/cleanup-e2e.ts",
+    "probe:throttle": "tsx scripts/probe-throttle.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
