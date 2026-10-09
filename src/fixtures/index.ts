@@ -29,11 +29,15 @@ export const test = base.extend<Fixtures>({
   user: async ({}, use) => {
     await use(newTestUser());
   },
-  loggedInPage: async ({ page, user }, use) => {
-    await new RegisterPage(page).registerAs(user);
-    await new DashboardPage(page).expectLoaded();
-    await use(page);
-  },
+  // O cadastro pode esperar o limite de requisições da API liberar; esse tempo não conta no timeout do teste.
+  loggedInPage: [
+    async ({ page, user }, use) => {
+      await new RegisterPage(page).registerAs(user);
+      await new DashboardPage(page).expectLoaded();
+      await use(page);
+    },
+    { timeout: 240_000 },
+  ],
   workspace: async ({ loggedInPage, user }, use) => {
     const project: ProjectData = { key: PROJECT_KEY, name: 'Projeto E2E' };
     await new ProjectsPage(loggedInPage).create(project);

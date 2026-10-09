@@ -34,6 +34,9 @@ jobs:
     timeout-minutes: 45
     strategy:
       fail-fast: false
+      # O escopo "all" cria contas, e a API limita o cadastro por minuto: um navegador por vez, para que os três
+      # não dividam o mesmo limite. Os testes somente-leitura não cadastram nada e seguem em paralelo.
+      max-parallel: ${{ (github.event_name == 'schedule' || inputs.scope == 'all') && 1 || 3 }}
       matrix:
         project: [chromium, firefox, webkit]
     steps:
