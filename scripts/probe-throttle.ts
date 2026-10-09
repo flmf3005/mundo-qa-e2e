@@ -8,8 +8,12 @@
  * minuto, voltam 429. Se continuarem aparecendo 400 depois do primeiro 429, ou se passarem mais de 5 antes dele,
  * a chave varia entre requisições (o app não está enxergando o IP real, ex.: `trust proxy` com saltos a menos).
  *
+ * Com `--spoof`, cada requisição leva um X-Forwarded-For inventado. Se o resultado MUDA em relação à execução sem a
+ * opção (passam mais de 5), o app aceita IP forjado: o número de proxies (`TRUST_PROXY`) está a mais.
+ *
  * Uso (espere 1 minuto entre duas execuções, para os contadores zerarem):
  *   npm run probe:throttle
+ *   npm run probe:throttle -- --spoof
  *   npm run probe:throttle -- --requests=30 --interval=300 --url=https://outro-ambiente
  */
 const args = new Map(
@@ -22,17 +26,24 @@ const args = new Map(
 const baseUrl = args.get('url') ?? process.env.BASE_URL ?? 'https://mundoqa-staging.onrender.com';
 const requests = Number(args.get('requests') ?? '24');
 const intervalMs = Number(args.get('interval') ?? '500');
+const spoof = args.get('spoof') === 'true';
 const LIMIT = 5; // limite documentado do cadastro: 5 por minuto por IP
+
+const randomIp = () => `${1 + Math.floor(Math.random() * 222)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${1 + Math.floor(Math.random() * 254)}`;
 
 async function main() {
   const url = new URL('/api/auth/register', baseUrl).toString();
-  console.log(`Sonda em ${url}: ${requests} requisições, 1 a cada ${intervalMs} ms (corpo vazio, nada é criado)\n`);
+  console.log(
+    `Sonda em ${url}: ${requests} requisições, 1 a cada ${intervalMs} ms (corpo vazio, nada é criado)` +
+      (spoof ? ', com X-Forwarded-For forjado a cada uma' : '') +
+      '\n',
+  );
 
   const statuses: number[] = [];
   for (let i = 1; i <= requests; i++) {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(spoof ? { 'X-Forwarded-For': randomIp() } : {}) },
       body: '{}',
       signal: AbortSignal.timeout(20_000),
     });
@@ -53,11 +64,16 @@ async function main() {
   console.log(`\nPassaram antes do primeiro 429: ${passedBefore} (esperado: ${LIMIT} com chave estável)`);
   console.log(`Passaram depois do primeiro 429: ${passedAfter} (esperado: 0 com chave estável)`);
   if (passedBefore <= LIMIT && passedAfter === 0) {
-    console.log('\nConclusão: consistente com um limite por IP estável.');
+    console.log(
+      spoof
+        ? '\nConclusão: o X-Forwarded-For forjado não alterou o resultado (o app não aceita IP forjado) e o limite é por IP estável.'
+        : '\nConclusão: consistente com um limite por IP estável.',
+    );
   } else {
     console.log(
       '\nConclusão: a chave do limite VARIA entre requisições do mesmo cliente. O app provavelmente não vê o IP real ' +
-        '(confira o `trust proxy` e quantos proxies há na frente do Node).',
+        '(confira o `trust proxy` e quantos proxies há na frente do Node).' +
+        (spoof ? ' Com --spoof, compare com a execução sem a opção: se só esta falha, o app aceita IP forjado (proxies a mais).' : ''),
     );
     process.exitCode = 1;
   }
