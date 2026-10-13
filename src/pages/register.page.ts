@@ -5,6 +5,27 @@ import type { TestUser } from '../utils/data';
 const THROTTLE_BACKOFF_MS = [20_000, 30_000, 40_000, 60_000];
 const THROTTLED = /too many requests|throttler/i;
 
+// Espaçamento preventivo: em vez de bater no limite e esperar, não envia mais de MAX_PER_WINDOW cadastros em 60 s
+// (o limite é 5; uma de folga). O estado é por processo de worker, que é exato com 1 worker (como no CI).
+const WINDOW_MS = 60_000;
+const MAX_PER_WINDOW = 4;
+const sentAt: number[] = [];
+
+async function paceRegistrations(page: Page) {
+  for (;;) {
+    const now = Date.now();
+    while (sentAt.length > 0 && now - sentAt[0]! >= WINDOW_MS) sentAt.shift();
+    if (sentAt.length < MAX_PER_WINDOW) break;
+    const wait = WINDOW_MS - (now - sentAt[0]!) + 500;
+    test.info().annotations.push({
+      type: 'cadastro-espacado',
+      description: `Aguardando ${Math.ceil(wait / 1000)}s para não passar do limite de cadastros por minuto`,
+    });
+    await page.waitForTimeout(wait);
+  }
+  sentAt.push(Date.now());
+}
+
 export class RegisterPage {
   readonly form: Locator;
   readonly nameInput: Locator;
@@ -48,6 +69,7 @@ export class RegisterPage {
     await this.passwordInput.fill(user.password);
 
     for (let attempt = 0; ; attempt++) {
+      await paceRegistrations(this.page);
       await this.submitButton.click();
       if (!(await this.wasThrottled())) return;
 

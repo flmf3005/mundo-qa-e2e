@@ -41,7 +41,11 @@ test.describe('Planos de execução', { tag: '@writes' }, () => {
     await expect(plan.title).toContainText('Plano editado');
 
     await page.getByTestId('plan-delete-button').click();
+    // A exclusão é uma requisição: navegar antes de ela terminar a cancela (o Firefox faz isso quase sempre) e o plano
+    // continua na lista. Por isso se espera a resposta do DELETE antes de ir para a lista.
+    const deleted = page.waitForResponse((res) => res.request().method() === 'DELETE' && /\/api\/plans\//.test(res.url()));
     await page.getByTestId('plan-delete-confirm').click();
+    expect((await deleted).ok()).toBe(true);
     await plans.goto();
     await plans.plansTab.click();
     await expect(page.getByTestId('plans-empty')).toBeVisible();

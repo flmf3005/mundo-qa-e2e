@@ -47,6 +47,9 @@ test.describe('Validações de formulário', { tag: '@writes' }, () => {
   });
 
   test('cadastro com e-mail já usado é recusado', async ({ loggedInPage: page, user }) => {
+    // O segundo cadastro acontece aqui, dentro do teste, então uma espera pelo limite de cadastros conta neste timeout
+    // (a da fixture tem timeout próprio). O limite é de 60 s, por isso o teto precisa ser bem maior que isso.
+    test.setTimeout(150_000);
     await new DashboardPage(page).logout();
 
     const register = new RegisterPage(page);
